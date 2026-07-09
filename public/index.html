@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>School Photo Poster</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      padding: 32px 28px;
+      width: 100%;
+      max-width: 520px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      color: #1a1a2e;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 6px;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 10px;
+      font-size: 1rem;
+      margin-bottom: 18px;
+      transition: border-color 0.2s;
+      background: #fafafa;
+      color: #111;
+      -webkit-appearance: none;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #4f46e5;
+      background: #fff;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 110px;
+    }
+
+    .file-drop {
+      border: 2px dashed #d1d5db;
+      border-radius: 10px;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      margin-bottom: 18px;
+      transition: border-color 0.2s, background 0.2s;
+      background: #fafafa;
+    }
+
+    .file-drop:hover,
+    .file-drop.dragover {
+      border-color: #4f46e5;
+      background: #eef2ff;
+    }
+
+    .file-drop .icon { font-size: 2.2rem; margin-bottom: 8px; }
+
+    .file-drop p {
+      color: #555;
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+    }
+
+    .file-drop small { color: #888; font-size: 0.78rem; }
+
+    input[type="file"] { display: none; }
+
+    #file-list {
+      font-size: 0.82rem;
+      color: #444;
+      margin-bottom: 18px;
+      min-height: 0;
+    }
+
+    #file-list .file-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    #file-list .file-item .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .consent-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 24px;
+      background: #fffbeb;
+      border: 1.5px solid #f59e0b;
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+
+    .consent-row input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      accent-color: #4f46e5;
+      margin-top: 2px;
+      cursor: pointer;
+    }
+
+    .consent-row span {
+      font-size: 0.88rem;
+      color: #444;
+      line-height: 1.5;
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 14px;
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
+      -webkit-appearance: none;
+    }
+
+    button[type="submit"]:hover { background: #4338ca; }
+    button[type="submit"]:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    #message {
+      display: none;
+      margin-top: 20px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      font-size: 0.92rem;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    #message.success { background: #d1fae5; color: #065f46; border: 1.5px solid #6ee7b7; }
+    #message.error   { background: #fee2e2; color: #7f1d1d; border: 1.5px solid #fca5a5; }
+
+    .spinner {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>📸 School Photo Poster</h1>
+    <p class="subtitle">Upload photos and post directly to the school Facebook page.</p>
+
+    <form id="postForm" novalidate>
+      <label for="username">Your name</label>
+      <input type="text" id="username" name="username" placeholder="e.g. Mrs Smith" autocomplete="name" required />
+
+      <label for="password">App password</label>
+      <input type="password" id="password" name="password" placeholder="Enter shared app password" autocomplete="current-password" required />
+
+      <label>Photos <small style="font-weight:400;color:#888">(max 5, JPEG/PNG/HEIC, 10 MB each)</small></label>
+      <div class="file-drop" id="fileDrop">
+        <div class="icon">🖼️</div>
+        <p>Tap to select photos</p>
+        <small>or drag and drop here</small>
+        <input type="file" id="photos" name="photos" accept="image/jpeg,image/png,image/heic,image/heif" multiple />
+      </div>
+      <div id="file-list"></div>
+
+      <label for="caption">Caption</label>
+      <textarea id="caption" name="caption" placeholder="Describe what's happening in the photo…" maxlength="2000"></textarea>
+
+      <div class="consent-row">
+        <input type="checkbox" id="consent" name="consent" value="true" required />
+        <span><label for="consent" style="display:inline;font-weight:400;font-size:0.88rem;">I confirm consent and safeguarding checks are complete for all individuals in these photos.</label></span>
+      </div>
+
+      <button type="submit" id="submitBtn">
+        <span id="btnLabel">Post to Facebook</span>
+        <span class="spinner" id="spinner"></span>
+      </button>
+    </form>
+
+    <div id="message" role="alert" aria-live="polite"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('postForm');
+    const fileInput = document.getElementById('photos');
+    const fileDrop = document.getElementById('fileDrop');
+    const fileList = document.getElementById('file-list');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnLabel = document.getElementById('btnLabel');
+    const spinner = document.getElementById('spinner');
+    const messageEl = document.getElementById('message');
+
+    const MAX_FILES = 5;
+    const MAX_SIZE_MB = 10;
+
+    // ── File picker UI ─────────────────────────────────────────────────────
+    fileDrop.addEventListener('click', () => fileInput.click());
+    fileDrop.addEventListener('dragover', (e) => { e.preventDefault(); fileDrop.classList.add('dragover'); });
+    fileDrop.addEventListener('dragleave', () => fileDrop.classList.remove('dragover'));
+    fileDrop.addEventListener('drop', (e) => {
+      e.preventDefault();
+      fileDrop.classList.remove('dragover');
+      fileInput.files = e.dataTransfer.files;
+      renderFileList();
+    });
+
+    fileInput.addEventListener('change', renderFileList);
+
+    function renderFileList() {
+      const files = Array.from(fileInput.files);
+      fileList.innerHTML = '';
+      files.forEach((f) => {
+        const item = document.createElement('div');
+        item.className = 'file-item';
+        item.innerHTML = `<span>📎</span><span class="name">${escapeHtml(f.name)}</span><span>${(f.size / 1024 / 1024).toFixed(1)} MB</span>`;
+        fileList.appendChild(item);
+      });
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── Form submission ────────────────────────────────────────────────────
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideMessage();
+
+      const files = Array.from(fileInput.files);
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const consent = document.getElementById('consent').checked;
+      const caption = document.getElementById('caption').value.trim();
+
+      // Client-side validation
+      if (!username) return showMessage('error', 'Please enter your name.');
+      if (!password) return showMessage('error', 'Please enter the app password.');
+      if (files.length === 0) return showMessage('error', 'Please select at least one photo.');
+      if (files.length > MAX_FILES) return showMessage('error', `Maximum ${MAX_FILES} photos allowed.`);
+      for (const f of files) {
+        if (f.size > MAX_SIZE_MB * 1024 * 1024) {
+          return showMessage('error', `"${escapeHtml(f.name)}" is larger than ${MAX_SIZE_MB} MB.`);
+        }
+      }
+      if (!consent) return showMessage('error', 'Please confirm consent and safeguarding checks before posting.');
+
+      // Build FormData
+      const data = new FormData();
+      data.append('username', username);
+      data.append('password', password);
+      data.append('caption', caption);
+      data.append('consent', 'true');
+      files.forEach((f) => data.append('photos', f));
+
+      setLoading(true);
+
+      try {
+        const resp = await fetch('/post', { method: 'POST', body: data });
+        const json = await resp.json();
+        if (json.ok) {
+          showMessage('success', '✅ ' + json.message);
+          form.reset();
+          fileList.innerHTML = '';
+        } else {
+          showMessage('error', '❌ ' + json.message);
+        }
+      } catch (err) {
+        showMessage('error', '❌ Network error. Please check your connection and try again.');
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    function setLoading(loading) {
+      submitBtn.disabled = loading;
+      btnLabel.style.display = loading ? 'none' : 'inline';
+      spinner.style.display = loading ? 'block' : 'none';
+    }
+
+    function showMessage(type, text) {
+      messageEl.className = type;
+      messageEl.textContent = text;
+      messageEl.style.display = 'block';
+      messageEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function hideMessage() {
+      messageEl.style.display = 'none';
+      messageEl.className = '';
+    }
+  </script>
+</body>
+</html>
