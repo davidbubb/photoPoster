@@ -17,6 +17,7 @@ const PORT = process.env.PORT || 3000;
 const APP_PASSWORD = process.env.APP_PASSWORD || '';
 const FB_PAGE_ID = process.env.FB_PAGE_ID || '';
 const FB_PAGE_ACCESS_TOKEN = process.env.FB_PAGE_ACCESS_TOKEN || '';
+const FB_GRAPH_API_VERSION = process.env.FB_GRAPH_API_VERSION || 'v19.0';
 const MAX_IMAGES = parseInt(process.env.MAX_IMAGES || '5', 10);
 const MAX_FILE_SIZE_MB = parseInt(process.env.MAX_FILE_SIZE_MB || '10', 10);
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -79,7 +80,7 @@ async function uploadUnpublishedPhoto(fileBuffer, mimeType) {
   form.append('access_token', FB_PAGE_ACCESS_TOKEN);
 
   const response = await axios.post(
-    `https://graph.facebook.com/v19.0/${FB_PAGE_ID}/photos`,
+    `https://graph.facebook.com/${FB_GRAPH_API_VERSION}/${FB_PAGE_ID}/photos`,
     form,
     { headers: form.getHeaders() }
   );
@@ -89,7 +90,7 @@ async function uploadUnpublishedPhoto(fileBuffer, mimeType) {
 async function createFeedPost(caption, mediaIds) {
   const attachedMedia = mediaIds.map((id) => ({ media_fbid: id }));
   const response = await axios.post(
-    `https://graph.facebook.com/v19.0/${FB_PAGE_ID}/feed`,
+    `https://graph.facebook.com/${FB_GRAPH_API_VERSION}/${FB_PAGE_ID}/feed`,
     {
       message: caption,
       attached_media: attachedMedia,
@@ -176,7 +177,7 @@ app.post('/post', postLimiter, upload.array('photos', MAX_IMAGES), async (req, r
   } catch (err) {
     const errorMessage = err.response?.data?.error?.message || err.message || 'Unknown error';
     appendLog({ username, imageCount: files.length, consentChecked: true, status: 'failure', errorMessage });
-    return res.status(502).json({ ok: false, message: `Failed to post to Facebook. ${errorMessage}` });
+    return res.status(503).json({ ok: false, message: `Failed to post to Facebook. ${errorMessage}` });
   }
 });
 
@@ -187,7 +188,7 @@ app.use((err, req, res, _next) => {
     return res.status(400).json({ ok: false, message: err.message });
   }
   console.error('Unhandled error:', err);
-  res.status(500).json({ ok: false, message: 'Internal server error.' });
+  return res.status(500).json({ ok: false, message: 'Internal server error.' });
 });
 
 // ── Start server ──────────────────────────────────────────────────────────────

@@ -202,7 +202,7 @@
       <label for="password">App password</label>
       <input type="password" id="password" name="password" placeholder="Enter shared app password" autocomplete="current-password" required />
 
-      <label>Photos <small style="font-weight:400;color:#888">(max 5, JPEG/PNG/HEIC, 10 MB each)</small></label>
+      <label for="photos">Photos <small style="font-weight:400;color:#888">(max 5, JPEG/PNG/HEIC, 10 MB each)</small></label>
       <div class="file-drop" id="fileDrop">
         <div class="icon">🖼️</div>
         <p>Tap to select photos</p>
@@ -241,6 +241,9 @@
     const MAX_FILES = 5;
     const MAX_SIZE_MB = 10;
 
+    // Maintain selected files in a separate array for cross-browser compatibility
+    let selectedFiles = [];
+
     // ── File picker UI ─────────────────────────────────────────────────────
     fileDrop.addEventListener('click', () => fileInput.click());
     fileDrop.addEventListener('dragover', (e) => { e.preventDefault(); fileDrop.classList.add('dragover'); });
@@ -248,16 +251,18 @@
     fileDrop.addEventListener('drop', (e) => {
       e.preventDefault();
       fileDrop.classList.remove('dragover');
-      fileInput.files = e.dataTransfer.files;
+      selectedFiles = Array.from(e.dataTransfer.files);
       renderFileList();
     });
 
-    fileInput.addEventListener('change', renderFileList);
+    fileInput.addEventListener('change', () => {
+      selectedFiles = Array.from(fileInput.files);
+      renderFileList();
+    });
 
     function renderFileList() {
-      const files = Array.from(fileInput.files);
       fileList.innerHTML = '';
-      files.forEach((f) => {
+      selectedFiles.forEach((f) => {
         const item = document.createElement('div');
         item.className = 'file-item';
         item.innerHTML = `<span>📎</span><span class="name">${escapeHtml(f.name)}</span><span>${(f.size / 1024 / 1024).toFixed(1)} MB</span>`;
@@ -274,7 +279,7 @@
       e.preventDefault();
       hideMessage();
 
-      const files = Array.from(fileInput.files);
+      const files = selectedFiles;
       const username = document.getElementById('username').value.trim();
       const password = document.getElementById('password').value;
       const consent = document.getElementById('consent').checked;
@@ -308,6 +313,7 @@
         if (json.ok) {
           showMessage('success', '✅ ' + json.message);
           form.reset();
+          selectedFiles = [];
           fileList.innerHTML = '';
         } else {
           showMessage('error', '❌ ' + json.message);
