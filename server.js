@@ -132,7 +132,7 @@ app.post('/post', postLimiter, upload.array('photos', MAX_IMAGES), async (req, r
   const password = String(req.body.password || '');
   const caption = String(req.body.caption || '').trim();
   const consent = String(req.body.consent || '');
-  const files = req.files || [];
+  const files = Array.isArray(req.files) ? req.files : [];
 
   // ── Authentication ────────────────────────────────────────────────────────
   if (!APP_PASSWORD) {
@@ -183,9 +183,10 @@ app.post('/post', postLimiter, upload.array('photos', MAX_IMAGES), async (req, r
 // ── Multer error handler ──────────────────────────────────────────────────────
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, _next) => {
-  if (err instanceof multer.MulterError || err.message) {
+  if (err instanceof multer.MulterError) {
     return res.status(400).json({ ok: false, message: err.message });
   }
+  console.error('Unhandled error:', err);
   res.status(500).json({ ok: false, message: 'Internal server error.' });
 });
 
