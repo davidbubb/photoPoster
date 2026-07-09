@@ -3,6 +3,7 @@
 require('dotenv').config();
 
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const multer = require('multer');
 const axios = require('axios');
 const FormData = require('form-data');
@@ -98,20 +99,39 @@ async function createFeedPost(caption, mediaIds) {
   return response.data.id;
 }
 
+// ── Rate limiting ─────────────────────────────────────────────────────────────
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const postLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, message: 'Too many requests. Please wait a few minutes and try again.' },
+});
+
 // ── Static files ──────────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ── Routes ────────────────────────────────────────────────────────────────────
-app.get('/', (_req, res) => {
+app.get('/', generalLimiter, (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.get('/health', (_req, res) => {
+app.get('/health', generalLimiter, (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.post('/post', upload.array('photos', MAX_IMAGES), async (req, res) => {
-  const { username = '', password = '', caption = '', consent } = req.body;
+app.post('/post', postLimiter, upload.array('photos', MAX_IMAGES), async (req, res) => {
+  const username = String(req.body.username || '').trim();
+  const password = String(req.body.password || '');
+  const caption = String(req.body.caption || '').trim();
+  const consent = String(req.body.consent || '');
   const files = req.files || [];
 
   // ── Authentication ────────────────────────────────────────────────────────
@@ -123,7 +143,7 @@ app.post('/post', upload.array('photos', MAX_IMAGES), async (req, res) => {
   }
 
   // ── Validation ────────────────────────────────────────────────────────────
-  if (consent !== 'true' && consent !== true) {
+  if (consent !== 'true') {
     return res.status(400).json({ ok: false, message: 'You must confirm consent and safeguarding checks before posting.' });
   }
 
